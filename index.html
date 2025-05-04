@@ -21,6 +21,44 @@
             --chuangzhang-color: #946f94;
         }
 
+        /* 新增动画样式 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--primary-color);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        .map-container {
+            transition: opacity 0.3s ease;
+        }
+        .fade-out {
+            opacity: 0;
+        }
+        .fade-in {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         body {
             font-family: 'Microsoft YaHei', SimSun, sans-serif;
             background: #f5e6d3;
@@ -60,7 +98,6 @@
             white-space: nowrap;
         }
 
-        /* 各景点颜色样式 */
         .map-label.youlang { background: var(--youlang-color); }
         .map-label.bitaohua { background: var(--bitaohua-color); }
         .map-label.yuedongmen { background: var(--yuedongmen-color); }
@@ -76,7 +113,6 @@
             background: var(--secondary-color);
             transform: translate(-50%, -50%) scale(1.1);
         }
-        /* 悬停颜色 */
         .map-label.youlang:hover { background: #236a78; }
         .map-label.bitaohua:hover { background: #a32b4b; }
         .map-label.yuedongmen:hover { background: #554466; }
@@ -108,7 +144,10 @@
     </style>
 </head>
 <body>
-
+    <div class="loading-overlay" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+    <button class="back-btn" onclick="goBack()">← 返回</button>
     
     <div class="map-container">
         <img id="main-map" src="main-map.jpg" usemap="#currentMap">
@@ -262,7 +301,7 @@ const MAP_CONFIGS = {
             {
                 id: "youhua",
                 shape: "rect",
-                coords: [0.3, 0.1, 0.3, 0.1],
+                coords: [0.6, 0.3, 0.8, 0.6],
                 label: "后房门油画",
                 target: "youhua-detail"
             },
@@ -276,7 +315,7 @@ const MAP_CONFIGS = {
             {
                 id: "pingfeng",
                 shape: "poly",
-                coords: [0.7,0.3, 0.7,0.3, 0.5,0.6],
+                coords: [0.2,0.3, 0.3,0.3, 0.25,0.6],
                 label: "紫檀屏风",
                 target: "pingfeng-detail"
             },
@@ -334,40 +373,53 @@ const MAP_CONFIGS = {
 let historyStack = ["main"];
 let resizeTimer;
 
-function initMap() {
+async function initMap() {
     const mapImg = document.getElementById('main-map');
     const mapElement = document.querySelector('map[name="currentMap"]');
     const labelsContainer = document.getElementById('map-labels');
+    const loadingOverlay = document.getElementById('loading');
     
+    // 显示加载动画
+    loadingOverlay.style.display = 'flex';
+    mapImg.parentElement.classList.add('fade-out');
+
+    // 清空旧内容
     mapElement.innerHTML = '';
     labelsContainer.innerHTML = '';
     
     const currentMap = historyStack[historyStack.length-1];
     const config = MAP_CONFIGS[currentMap];
     
-    mapImg.src = config.img;
+    // 使用Promise确保图片加载完成
+    await new Promise((resolve) => {
+        mapImg.onload = resolve;
+        mapImg.src = config.img;
+    });
 
-    mapImg.onload = () => {
-        const displayWidth = mapImg.clientWidth;
-        const displayHeight = mapImg.clientHeight;
+    // 隐藏加载动画
+    loadingOverlay.style.display = 'none';
+    mapImg.parentElement.classList.remove('fade-out');
+    mapImg.parentElement.classList.add('fade-in');
 
-        config.areas.forEach(area => {
-            const areaElem = document.createElement('area');
-            areaElem.shape = area.shape;
-            areaElem.coords = getScaledCoords(area.coords, displayWidth, displayHeight, area.shape);
-            areaElem.alt = area.label;
-            areaElem.addEventListener('click', (e) => {
-                e.preventDefault();
-                handleClick(area);
-            });
-            mapElement.appendChild(areaElem);
+    const displayWidth = mapImg.clientWidth;
+    const displayHeight = mapImg.clientHeight;
 
-            if(area.label) {
-                const label = createMapLabel(area, displayWidth, displayHeight);
-                labelsContainer.appendChild(label);
-            }
+    config.areas.forEach(area => {
+        const areaElem = document.createElement('area');
+        areaElem.shape = area.shape;
+        areaElem.coords = getScaledCoords(area.coords, displayWidth, displayHeight, area.shape);
+        areaElem.alt = area.label;
+        areaElem.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleClick(area);
         });
-    };
+        mapElement.appendChild(areaElem);
+
+        if(area.label) {
+            const label = createMapLabel(area, displayWidth, displayHeight);
+            labelsContainer.appendChild(label);
+        }
+    });
 }
 
 function createMapLabel(area, displayWidth, displayHeight) {
@@ -428,6 +480,15 @@ function handleResize() {
 
 function handleClick(area) {
     if (area.target && MAP_CONFIGS[area.target]) {
+        // 点击动画
+        const clickedLabel = document.querySelector(`.${area.id}`);
+        if(clickedLabel) {
+            clickedLabel.style.transform = 'translate(-50%, -50%) scale(0.9)';
+            setTimeout(() => {
+                clickedLabel.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 200);
+        }
+        
         historyStack.push(area.target);
         initMap();
     }
@@ -435,6 +496,13 @@ function handleClick(area) {
 
 function goBack() {
     if (historyStack.length > 1) {
+        // 返回按钮动画
+        const backBtn = document.querySelector('.back-btn');
+        backBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            backBtn.style.transform = 'scale(1)';
+        }, 200);
+
         historyStack.pop();
         initMap();
     }
