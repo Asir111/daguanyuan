@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大观园全景导览系统</title>
+    <style>
+        :root {
+            --primary-color: #8b4513;
+            --secondary-color: #a0522d;
+            --label-bg: rgba(139, 69, 19, 0.9);
+            --youlang-color: #2d8da0;
+            --bitaohua-color: #d64161;
+            --yuedongmen-color: #6c5b7b;
+            --shanshi-color: #4a766e;
+            --zhulihuazhang-color: #2a5f3d;
+            --room-color: #8a7967;
+            --youhua-color: #9e7358;
+            --mirror-color: #6b8c9e;
+            --pingfeng-color: #b8885e;
+            --chuangzhang-color: #946f94;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', SimSun, sans-serif;
+            background: #f5e6d3;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #main-map {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .map-label {
+            position: absolute;
+            background: var(--label-bg);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            pointer-events: auto;
+            white-space: nowrap;
+        }
+
+        /* 各景点颜色样式 */
+        .map-label.youlang { background: var(--youlang-color); }
+        .map-label.bitaohua { background: var(--bitaohua-color); }
+        .map-label.yuedongmen { background: var(--yuedongmen-color); }
+        .map-label.shanshi { background: var(--shanshi-color); }
+        .map-label.zhulihuazhang { background: var(--zhulihuazhang-color); }
+        .map-label.room { background: var(--room-color); }
+        .map-label.youhua { background: var(--youhua-color); }
+        .map-label.mirror { background: var(--mirror-color); }
+        .map-label.pingfeng { background: var(--pingfeng-color); }
+        .map-label.chuangzhang { background: var(--chuangzhang-color); }
+        
+        .map-label:hover {
+            background: var(--secondary-color);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        /* 悬停颜色 */
+        .map-label.youlang:hover { background: #236a78; }
+        .map-label.bitaohua:hover { background: #a32b4b; }
+        .map-label.yuedongmen:hover { background: #554466; }
+        .map-label.shanshi:hover { background: #365c56; }
+        .map-label.zhulihuazhang:hover { background: #1d402c; }
+        .map-label.room:hover { background: #6d5e4f; }
+        .map-label.youhua:hover { background: #7d5a44; }
+        .map-label.mirror:hover { background: #4f6876; }
+        .map-label.pingfeng:hover { background: #966c43; }
+        .map-label.chuangzhang:hover { background: #735573; }
+
+        .back-btn {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            padding: 12px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="map-container">
+        <img id="main-map" src="main-map.jpg" usemap="#currentMap">
+        <map name="currentMap"></map>
+        <div id="map-labels"></div>
+    </div>
+
+<script>
+const MAP_CONFIGS = {
+    main: {
+        img: "main-map.jpg",
+        areas: [{
+            id: "yihong",
+            shape: "rect",
+            coords: [0.3, 0.6, 0.4, 0.9],
+            label: "怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "yihong-detail": {
+        img: "images/yihong.png",
+        areas: [
+            {
+                id: "back",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主图",
+                target: "main"
+            },
+            {
+                id: "bridge",
+                shape: "rect",
+                coords: [0.45, 0.1, 0.65, 0.1],
+                label: "白石板桥",
+                target: "bridge-detail"
+            },
+            {
+                id: "youlang",
+                shape: "poly",
+                coords: [0.45, 0.55, 0.65, 0.55],
+                label: "游廊",
+                target: "youlang-detail"
+            },
+            {
+                id: "bitaohua",
+                shape: "rect",
+                coords: [0.7, 0.15, 0.7, 0.2],
+                label: "碧桃花",
+                target: "bitaohua-detail"
+            },
+            {
+                id: "yuedongmen",
+                shape: "circle",
+                coords: [0.73, 0.3, 0.05],
+                label: "月洞门",
+                target: "yuedongmen-detail"
+            },
+            {
+                id: "shanshi",
+                shape: "rect",
+                coords: [0.5, 0.4, 0.5, 0.5],
+                label: "玲珑山石",
+                target: "shanshi-detail"
+            },
+            {
+                id: "zhulihuazhang",
+                shape: "rect",
+                coords: [0.7, 0.2, 0.6, 0.1],
+                label: "竹篱花帐",
+                target: "zhulihuazhang-detail"
+            },
+            {
+                id: "room",
+                shape: "rect",
+                coords: [0.5, 0.3, 0.5, 0.3],
+                label: "房内",
+                target: "room-detail"
+            }
+        ]
+    },
+    "bridge-detail": {
+        img: "images/baishibanqiao.png",
+        areas: [{
+            id: "back-bridge",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "youlang-detail": {
+        img: "images/youlang.png",
+        areas: [{
+            id: "back-youlang",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "bitaohua-detail": {
+        img: "images/bitaohua.png",
+        areas: [{
+            id: "back-bitaohua",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "yuedongmen-detail": {
+        img: "images/yuedongmen.png",
+        areas: [{
+            id: "back-yuedongmen",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "shanshi-detail": {
+        img: "images/shanshi.png",
+        areas: [{
+            id: "back-shanshi",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "zhulihuazhang-detail": {
+        img: "images/zhulihuazhang.png",
+        areas: [{
+            id: "back-zhulihuazhang",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回怡红院",
+            target: "yihong-detail"
+        }]
+    },
+    "room-detail": {
+        img: "images/room.png",
+        areas: [
+            {
+                id: "back-room",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回怡红院",
+                target: "yihong-detail"
+            },
+            {
+                id: "youhua",
+                shape: "rect",
+                coords: [0.3, 0.1, 0.3, 0.1],
+                label: "后房门油画",
+                target: "youhua-detail"
+            },
+            {
+                id: "mirror",
+                shape: "circle",
+                coords: [0.75, 0.4, 0.05],
+                label: "西洋机括镜",
+                target: "mirror-detail"
+            },
+            {
+                id: "pingfeng",
+                shape: "poly",
+                coords: [0.7,0.3, 0.7,0.3, 0.5,0.6],
+                label: "紫檀屏风",
+                target: "pingfeng-detail"
+            },
+            {
+                id: "chuangzhang",
+                shape: "rect",
+                coords: [0.5, 0.7, 0.7, 0.9],
+                label: "红绡床帐",
+                target: "chuangzhang-detail"
+            }
+        ]
+    },
+    "youhua-detail": {
+        img: "images/youhua.png",
+        areas: [{
+            id: "back-youhua",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回房内",
+            target: "room-detail"
+        }]
+    },
+    "mirror-detail": {
+        img: "images/mirror.png",
+        areas: [{
+            id: "back-mirror",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回房内",
+            target: "room-detail"
+        }]
+    },
+    "pingfeng-detail": {
+        img: "images/pingfeng.png",
+        areas: [{
+            id: "back-pingfeng",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回房内",
+            target: "room-detail"
+        }]
+    },
+    "chuangzhang-detail": {
+        img: "images/chuangzhang.png",
+        areas: [{
+            id: "back-chuangzhang",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回房内",
+            target: "room-detail"
+        }]
+    }
+};
+
+let historyStack = ["main"];
+let resizeTimer;
+
+function initMap() {
+    const mapImg = document.getElementById('main-map');
+    const mapElement = document.querySelector('map[name="currentMap"]');
+    const labelsContainer = document.getElementById('map-labels');
+    
+    mapElement.innerHTML = '';
+    labelsContainer.innerHTML = '';
+    
+    const currentMap = historyStack[historyStack.length-1];
+    const config = MAP_CONFIGS[currentMap];
+    
+    mapImg.src = config.img;
+
+    mapImg.onload = () => {
+        const displayWidth = mapImg.clientWidth;
+        const displayHeight = mapImg.clientHeight;
+
+        config.areas.forEach(area => {
+            const areaElem = document.createElement('area');
+            areaElem.shape = area.shape;
+            areaElem.coords = getScaledCoords(area.coords, displayWidth, displayHeight, area.shape);
+            areaElem.alt = area.label;
+            areaElem.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleClick(area);
+            });
+            mapElement.appendChild(areaElem);
+
+            if(area.label) {
+                const label = createMapLabel(area, displayWidth, displayHeight);
+                labelsContainer.appendChild(label);
+            }
+        });
+    };
+}
+
+function createMapLabel(area, displayWidth, displayHeight) {
+    const label = document.createElement('div');
+    label.className = `map-label ${area.id}`;
+    label.textContent = area.label;
+    
+    let centerX, centerY;
+    
+    switch(area.shape) {
+        case 'poly':
+            const points = area.coords;
+            let sumX = 0, sumY = 0;
+            for(let i=0; i<points.length; i+=2){
+                sumX += parseFloat(points[i]);
+                sumY += parseFloat(points[i+1]);
+            }
+            centerX = (sumX / (points.length/2)) * 100;
+            centerY = (sumY / (points.length/2)) * 100;
+            break;
+        case 'circle':
+            centerX = parseFloat(area.coords[0]) * 100;
+            centerY = parseFloat(area.coords[1]) * 100;
+            break;
+        default:
+            const [x1, y1, x2, y2] = area.coords;
+            centerX = (parseFloat(x1) + parseFloat(x2)) / 2 * 100;
+            centerY = (parseFloat(y1) + parseFloat(y2)) / 2 * 100;
+    }
+
+    label.style.left = `${centerX}%`;
+    label.style.top = `${centerY}%`;
+    
+    label.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleClick(area);
+    });
+    
+    return label;
+}
+
+function getScaledCoords(coords, width, height, shape) {
+    return coords.map((val, index) => {
+        const percent = parseFloat(val);
+        if(shape === 'circle' && index === 2) {
+            return Math.round(percent * Math.min(width, height));
+        }
+        return Math.round(percent * (index % 2 === 0 ? width : height));
+    }).join(',');
+}
+
+function handleResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if(historyStack.length > 0) initMap();
+    }, 100);
+}
+
+function handleClick(area) {
+    if (area.target && MAP_CONFIGS[area.target]) {
+        historyStack.push(area.target);
+        initMap();
+    }
+}
+
+function goBack() {
+    if (historyStack.length > 1) {
+        historyStack.pop();
+        initMap();
+    }
+}
+
+window.addEventListener('load', initMap);
+window.addEventListener('resize', handleResize);
+</script>
+</body>
+</html>
