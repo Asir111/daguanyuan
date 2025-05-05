@@ -1,148 +1,181 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大观园全景导览系统</title>
-    <style>
-        :root {
-            --primary-color: #8b4513;
-            --secondary-color: #a0522d;
-            --label-bg: rgba(139, 69, 19, 0.9);
-            --youlang-color: #2d8da0;
-            --bitaohua-color: #d64161;
-            --yuedongmen-color: #6c5b7b;
-            --shanshi-color: #4a766e;
-            --zhulihuazhang-color: #2a5f3d;
-            --room-color: #8a7967;
-            --youhua-color: #9e7358;
-            --mirror-color: #6b8c9e;
-            --pingfeng-color: #b8885e;
-            --chuangzhang-color: #946f94;
-        }
-
-        /* 新增动画样式 */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            pointer-events: none;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--primary-color);
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-        }
-
-        .map-container {
-            transition: opacity 0.3s ease;
-        }
-        .fade-out {
-            opacity: 0;
-        }
-        .fade-in {
-            opacity: 1;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        body {
-            font-family: 'Microsoft YaHei', SimSun, sans-serif;
-            background: #f5e6d3;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .map-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #main-map {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            cursor: pointer;
-        }
-
-        .map-label {
-            position: absolute;
-            background: var(--label-bg);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 100;
-            pointer-events: auto;
-            white-space: nowrap;
-        }
-
-        .map-label.youlang { background: var(--youlang-color); }
-        .map-label.bitaohua { background: var(--bitaohua-color); }
-        .map-label.yuedongmen { background: var(--yuedongmen-color); }
-        .map-label.shanshi { background: var(--shanshi-color); }
-        .map-label.zhulihuazhang { background: var(--zhulihuazhang-color); }
-        .map-label.room { background: var(--room-color); }
-        .map-label.youhua { background: var(--youhua-color); }
-        .map-label.mirror { background: var(--mirror-color); }
-        .map-label.pingfeng { background: var(--pingfeng-color); }
-        .map-label.chuangzhang { background: var(--chuangzhang-color); }
-        
-        .map-label:hover {
-            background: var(--secondary-color);
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-        .map-label.youlang:hover { background: #236a78; }
-        .map-label.bitaohua:hover { background: #a32b4b; }
-        .map-label.yuedongmen:hover { background: #554466; }
-        .map-label.shanshi:hover { background: #365c56; }
-        .map-label.zhulihuazhang:hover { background: #1d402c; }
-        .map-label.room:hover { background: #6d5e4f; }
-        .map-label.youhua:hover { background: #7d5a44; }
-        .map-label.mirror:hover { background: #4f6876; }
-        .map-label.pingfeng:hover { background: #966c43; }
-        .map-label.chuangzhang:hover { background: #735573; }
-
-        .back-btn {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            padding: 12px 25px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.3s;
-        }
-        .back-btn:hover {
-            background: var(--secondary-color);
-            transform: scale(1.05);
-        }
-    </style>
-</head>
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>大观园全景导览系统</title>
+        <style>
+            :root {
+                /* 基础色 */
+                --primary-color: #8b4513;
+                --secondary-color: #a0522d;
+                
+                /* 各院主题色 */
+                --yihong-color: #c03f3f;    /* 怡红院 */
+                --xiaoxiang-color: #4a766e;  /* 潇湘馆 */
+                --hengwu-color: #6c5b7b;    /* 蘅芜苑 */
+                --qiushuang-color: #5b8c85; /* 秋爽斋 */
+                
+                /* 蘅芜苑子元素 */
+                --stone-color: #7d93ab;     /* 奇石 */
+                --vine-color: #946f94;      /* 藤本植物 */
+                --herb-light: #8caa8d;      /* 浅草本 */
+                --herb-dark: #2a5f3d;       /* 深草本 */
+                --special-plant: #5b8c85;   /* 特殊植物 */
+                --gold-grass: #6d8c74;      /* 金簦草 */
+                --cloud-gray: #7b5b6c;      /* 清葛 */
+                --sky-green: #5b8c6c;       /* 玉蕗藤 */
+            }
+    
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.9);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                pointer-events: none;
+            }
+            
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid var(--primary-color);
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+            }
+    
+            .map-container {
+                transition: opacity 0.3s ease;
+            }
+            .fade-out {
+                opacity: 0;
+            }
+            .fade-in {
+                opacity: 1;
+            }
+    
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+    
+            body {
+                font-family: 'Microsoft YaHei', SimSun, sans-serif;
+                background: #f5e6d3;
+                margin: 0;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+    
+            .map-container {
+                position: relative;
+                width: 100%;
+                height: 100vh;
+                overflow: hidden;
+            }
+    
+            #main-map {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                cursor: pointer;
+            }
+    
+            .map-label {
+                position: absolute;
+                background: var(--primary-color);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 100;
+                pointer-events: auto;
+                white-space: nowrap;
+            }
+    
+            /* 各院主标签 */
+            .map-label.yihong { background: var(--yihong-color); }
+            .map-label.qiushuangzhai { background: var(--qiushuang-color); }
+            .map-label.xiaoxiangguan { background: var(--xiaoxiang-color); }
+            .map-label.hengwuyuan { background: var(--hengwu-color); }
+    
+            /* 蘅芜苑子元素 */
+            .map-label#stone { background: var(--stone-color); }
+            .map-label#bilu { background: var(--vine-color); }
+            .map-label#chenlan { background: var(--herb-light); }
+            .map-label#duruo { background: var(--herb-dark); }
+            .map-label#hengwu-plant { background: var(--special-plant); }
+            .map-label#jindeng { background: var(--gold-grass); }
+            .map-label#qingge { background: var(--cloud-gray); }
+            .map-label#yulu { background: var(--sky-green); }
+    
+            /* 通用悬停效果 */
+            .map-label:hover {
+                transform: translate(-50%, -50%) scale(1.1);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            }
+            .map-label.yihong:hover { background: #a83232; }
+            .map-label.qiushuangzhai:hover { background: #3a5a54; }
+            .map-label.xiaoxiangguan:hover { background: #365c56; }
+            .map-label.hengwuyuan:hover { background: #554466; }
+            .map-label#stone:hover { background: #6a7f94; }
+            .map-label#bilu:hover { background: #735573; }
+            .map-label#chenlan:hover { background: #7a9c7d; }
+            .map-label#duruo:hover { background: #1d402c; }
+            .map-label#hengwu-plant:hover { background: #3a5a54; }
+            .map-label#jindeng:hover { background: #5c7564; }
+            .map-label#qingge:hover { background: #634a63; }
+            .map-label#yulu:hover { background: #3a5a4a; }
+    
+            /* 文字优化 */
+            .map-label#stone,
+            .map-label.hengwuyuan,
+            .map-label#bilu,
+            .map-label#qingge {
+                color: #fff;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            }
+            .map-label#chenlan,
+            .map-label#jindeng,
+            .map-label#yulu {
+                color: #f0f8f2;
+            }
+            .map-label#duruo,
+            .map-label#hengwu-plant {
+                color: #d0e0d9;
+            }
+    
+            .back-btn {
+                position: fixed;
+                left: 20px;
+                top: 20px;
+                padding: 12px 25px;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                z-index: 1000;
+                transition: all 0.3s;
+            }
+            .back-btn:hover {
+                background: var(--secondary-color);
+                transform: scale(1.05);
+            }
+        </style>
+    </head>
 <body>
     <div class="loading-overlay" id="loading">
         <div class="loading-spinner"></div>
@@ -159,16 +192,41 @@
 const MAP_CONFIGS = {
     main: {
         img: "main-map.jpg",
-        areas: [{
-            id: "yihong",
-            shape: "rect",
-            coords: [0.3, 0.6, 0.4, 0.9],
-            label: "怡红院",
-            target: "yihong-detail"
-        }]
+        areas: [
+            {
+                id: "yihong",
+                shape: "rect",
+                coords: [0.3, 0.6, 0.4, 0.9],
+                label: "怡红院",
+                target: "yihong-detail"
+            },
+            {
+                id: "qiushuangzhai",
+                shape: "rect",
+                coords: [0.5, 0.9, 0.6, 0.8],
+                label: "秋爽斋",
+                target: "qiushuangzhai-detail"
+            },
+            {
+                id: "xiaoxiangguan",
+                shape: "rect",  // 使用多边形更精确
+                coords: [0.45, 0.65, 0.5, 0.9],
+                label: "潇湘馆",
+                target: "xiaoxiangguan-detail"
+            },
+            {
+                id: "hengwuyuan",
+                shape: "rect",
+                coords: [0.6, 0.15, 0.75, 0.2], // 右侧中部区域
+                label: "蘅芜苑",
+                target: "hengwu-detail"
+            }
+        ]
     },
+
+
     "yihong-detail": {
-        img: "images/yihong.png",
+        img: "images/yihong/yihong.png",
         areas: [
             {
                 id: "back",
@@ -229,7 +287,7 @@ const MAP_CONFIGS = {
         ]
     },
     "bridge-detail": {
-        img: "images/baishibanqiao.png",
+        img: "images/yihong/baishibanqiao.png",
         areas: [{
             id: "back-bridge",
             shape: "rect",
@@ -239,7 +297,7 @@ const MAP_CONFIGS = {
         }]
     },
     "youlang-detail": {
-        img: "images/youlang.png",
+        img: "images/yihong/youlang.png",
         areas: [{
             id: "back-youlang",
             shape: "rect",
@@ -249,7 +307,7 @@ const MAP_CONFIGS = {
         }]
     },
     "bitaohua-detail": {
-        img: "images/bitaohua.png",
+        img: "images/yihong/bitaohua.png",
         areas: [{
             id: "back-bitaohua",
             shape: "rect",
@@ -259,7 +317,7 @@ const MAP_CONFIGS = {
         }]
     },
     "yuedongmen-detail": {
-        img: "images/yuedongmen.png",
+        img: "images/yihong/yuedongmen.png",
         areas: [{
             id: "back-yuedongmen",
             shape: "rect",
@@ -269,7 +327,7 @@ const MAP_CONFIGS = {
         }]
     },
     "shanshi-detail": {
-        img: "images/shanshi.png",
+        img: "images/yihong/shanshi.png",
         areas: [{
             id: "back-shanshi",
             shape: "rect",
@@ -279,7 +337,7 @@ const MAP_CONFIGS = {
         }]
     },
     "zhulihuazhang-detail": {
-        img: "images/zhulihuazhang.png",
+        img: "images/yihong/zhulihuazhang.png",
         areas: [{
             id: "back-zhulihuazhang",
             shape: "rect",
@@ -289,7 +347,7 @@ const MAP_CONFIGS = {
         }]
     },
     "room-detail": {
-        img: "images/room.png",
+        img: "images/yihong/room.png",
         areas: [
             {
                 id: "back-room",
@@ -329,7 +387,7 @@ const MAP_CONFIGS = {
         ]
     },
     "youhua-detail": {
-        img: "images/youhua.png",
+        img: "images/yihong/youhua.png",
         areas: [{
             id: "back-youhua",
             shape: "rect",
@@ -339,7 +397,7 @@ const MAP_CONFIGS = {
         }]
     },
     "mirror-detail": {
-        img: "images/mirror.png",
+        img: "images/yihong/mirror.png",
         areas: [{
             id: "back-mirror",
             shape: "rect",
@@ -349,7 +407,7 @@ const MAP_CONFIGS = {
         }]
     },
     "pingfeng-detail": {
-        img: "images/pingfeng.png",
+        img: "images/yihong/pingfeng.png",
         areas: [{
             id: "back-pingfeng",
             shape: "rect",
@@ -359,13 +417,483 @@ const MAP_CONFIGS = {
         }]
     },
     "chuangzhang-detail": {
-        img: "images/chuangzhang.png",
+        img: "images/yihong/chuangzhang.png",
         areas: [{
             id: "back-chuangzhang",
             shape: "rect",
             coords: [0.05, 0.05, 0.2, 0.1],
             label: "返回房内",
             target: "room-detail"
+        }]
+    },
+"qiushuangzhai-detail": {
+        img: "images/qiushuang/qiushuangzhai.png",
+        areas: [
+            {
+                id: "back-qiushuang",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主图",
+                target: "main"
+            },
+            // 新增室内场景入口（可根据需要调整坐标）
+            {
+                id: "indoor-room",
+                shape: "rect",
+                coords: [0.5, 0.3, 0.4, 0.6], // 左侧区域
+                label: "室内场景",
+                target: "indoor-detail"
+            },
+            {
+                id: "outside-room",
+                shape: "rect",
+                coords: [0.5, 0.3, 0.8, 0.6], // 右侧区域
+                label: "室外风景",
+                target: "outside-detail"
+            }
+        ]
+    },
+    "xiaoxiangguan-detail": {
+        img: "images/xiaoxiang/main.png",
+        areas: [
+            {
+                id: "back-xiaoxiang",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主图",
+                target: "main"
+            },
+            // 新增四个核心区域
+            {
+                id: "bamboo-scene",
+                shape: "rect",
+                coords: [0.5, 0.4, 0.5, 0.4],
+                label: "竹影婆娑",
+                target: "bamboo-scene-detail"
+            },
+            {
+                id: "indoor",
+                shape: "rect",
+                coords: [0.3, 0.3, 0.4, 0.4],
+                label: "潇湘馆室内",
+                target: "xiaoxiang-indoor"
+            },
+            {
+                id: "plaque",
+                shape: "rect",
+                coords: [0.55, 0.6, 0.56, 0.4],
+                label: "潇湘馆匾额",
+                target: "plaque-detail"
+            },
+            {
+                id: "bridge",
+                shape: "rect",
+                coords: [0.55, 0.5, 0.85, 0.5],
+                label: "烟翠桥",
+                target: "yanqiao-detail"
+            }
+        ]
+    },
+    // 新增室内场景配置
+    "indoor-detail": {
+        img: "images/qiushuang/indoor.png",
+        areas: [
+            {
+                id: "back-indoor",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回秋爽斋",
+                target: "qiushuangzhai-detail"
+            },
+            // 新增四个室内元素
+            {
+                id: "table",
+                shape: "rect",
+                coords: [0.5, 0.4, 0.5, 0.4],  // 大案位置
+                label: "花梨大理石大案",
+                target: "table-detail"
+            },
+            {
+                id: "westwall",
+                shape: "poly",
+                coords: [0.3, 0.3, 0.3, 0.3], // 西墙区域
+                label: "西墙",
+                target: "westwall-detail"
+            },
+            {
+                id: "underwest",
+                shape: "rect",
+                coords: [0.4, 0.4, 0.3, 0.4], // 条案位置
+                label: "画下条案陈设",
+                target: "underwest-detail"
+            },
+            {
+                id: "eastbed",
+                shape: "circle",
+                coords: [0.6, 0.3, 0.1],  // 东床位置
+                label: "东床",
+                target: "eastbed-detail"
+            }
+        ]
+    },
+
+    // 新增各元素详情配置
+    "table-detail": {
+        img: "images/qiushuang/table.jpg",
+        areas: [
+            {
+                id: "back-table",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回室内",
+                target: "indoor-detail"
+            },
+            // 新增案上陈设
+            {
+                id: "table-items",
+                shape: "rect",
+                coords: [0.3, 0.2, 0.7, 0.4], // 覆盖案面区域
+                label: "案上陈设",
+                target: "table-items-detail"
+            }
+        ]
+    },
+
+    "table-items-detail": {
+        img: "images/qiushuang/案上陈设.png",
+        areas: [{
+            id: "back-table-items",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回大案",
+            target: "table-detail"
+        }]
+    },
+    "westwall-detail": {
+        img: "images/qiushuang/westwall.png",
+        areas: [{
+            id: "back-westwall",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室内",
+            target: "indoor-detail"
+        }]
+    },
+    "underwest-detail": {
+        img: "images/qiushuang/underwest.png",
+        areas: [
+            {
+                id: "back-underwest",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回室内",
+                target: "indoor-detail"
+            },
+            // 新增佛手
+            {
+                id: "buddha-hand",
+                shape: "circle",
+                coords: [0.5, 0.7, 0.08], // 中心位置
+                label: "佛手陈设",
+                target: "buddha-hand-detail"
+            }
+        ]
+    },
+    "buddha-hand-detail": {
+        img: "images/qiushuang/佛手.png",
+        areas: [{
+            id: "back-buddha",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回条案",
+            target: "underwest-detail"
+        }]
+    },
+    "eastbed-detail": {
+        img: "images/qiushuang/east.png",
+        areas: [{
+            id: "back-eastbed",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室内",
+            target: "indoor-detail"
+        }]
+    },
+"bamboo-scene-detail": {
+        img: "images/xiaoxiang/bamboo_scene.png",
+        areas: [
+            {
+                id: "back-bamboo",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主馆",
+                target: "xiaoxiangguan-detail"
+            },
+
+        ]
+    },
+
+    // 潇湘馆室内细节
+    "xiaoxiang-indoor": {
+        img: "images/xiaoxiang/indoor.png",
+        areas: [
+            {
+                id: "back-indoor",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主馆",
+                target: "xiaoxiangguan-detail"
+            },
+            // 月洞窗（圆形区域）
+            {
+                id: "yuedong-window",
+                shape: "circle",
+                coords: [0.8, 0.4, 0.12], // 圆心x70%，y40%，半径12%
+                label: "月洞窗",
+                target: "window-detail"
+            },
+            // 暖阁（矩形区域）
+            {
+                id: "nuange",
+                shape: "rect",
+                coords: [0.3, 0.3, 0.4, 0.3], // x30%-50%，y50%-80%
+                label: "暖阁",
+                target: "nuange-detail"
+            }
+        ]
+    },
+
+    // 匾额细节
+    "plaque-detail": {
+        img: "images/xiaoxiang/plaque_closeup.png",
+        areas: [{
+            id: "back-plaque",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回主馆",
+            target: "xiaoxiangguan-detail"
+        }]
+    },
+
+    // 烟翠桥细节
+    "yanqiao-detail": {
+        img: "images/xiaoxiang/yanqiao_bridge.png",
+        areas: [
+            {
+                id: "back-bridge",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主馆",
+                target: "xiaoxiangguan-detail"
+            },
+            
+        ]
+    },
+            // 新增细节配置
+    "window-detail": {
+        img: "images/xiaoxiang/moonwindow.png",
+        areas: [{
+            id: "back-window",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回书房",
+            target: "xiaoxiang-indoor"
+        }]
+    },
+    "nuange-detail": {
+        img: "images/xiaoxiang/nuange.png",
+        areas: [{
+            id: "back-nuange",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回书房",
+            target: "xiaoxiang-indoor"
+        }]
+    },
+    "hengwu-detail": {
+        img: "images/hengwu/main.png",
+        areas: [
+            {
+                id: "back-hengwu",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回主图",
+                target: "main"
+            },
+            {
+                id: "indoor",
+                shape: "rect",
+                coords: [0.6, 0.3, 0.4, 0.3], // 左侧区域
+                label: "室内场景",
+                target: "hengwu-indoor"
+            },
+            {
+                id: "outdoor",
+                shape: "rect", 
+                coords: [0.4, 0.5, 0.7, 0.4], // 右侧区域
+                label: "室外景观",
+                target: "hengwu-outdoor"
+            }
+        ]
+    },
+    "hengwu-indoor": {
+        img: "images/hengwu/indoor.png",
+        areas: [{
+            id: "back-indoor",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回蘅芜苑",
+            target: "hengwu-detail"
+        }]
+    },
+
+    // 室外基础配置 
+    "hengwu-outdoor": {
+        img: "images/hengwu/outdoor.png",
+        areas: [{
+            id: "back-outdoor",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回蘅芜苑",
+            target: "hengwu-detail"
+        },
+        {
+                id: "stone",
+                shape: "circle",
+                coords: [0.5, 0.3, 0.08], // 坐标可调整
+                label: "奇石",
+                target: "stone-detail"
+            },
+ // 薜荔
+ {
+                id: "bilu",
+                shape: "rect",
+                coords: [0.45, 0.35, 0.5, 0.45],
+                label: "薜荔藤萝",
+                target: "bilu-detail"
+            },
+            // 茞兰
+            {
+                id: "chenlan",
+                shape: "poly",
+                coords: [0.6, 0.4, 0.65, 0.35, 0.7, 0.45, 0.63, 0.5],
+                label: "茞兰芳芷",
+                target: "chenlan-detail"
+            },
+            // 杜若
+            {
+                id: "duruo",
+                shape: "circle",
+                coords: [0.55, 0.6, 0.05],
+                label: "杜若含香",
+                target: "duruo-detail"
+            },
+            // 蘅芜
+            {
+                id: "hengwu",
+                shape: "rect",
+                coords: [0.7, 0.55, 0.75, 0.65],
+                label: "蘅芜清芬",
+                target: "hengwu-plant-detail"
+            },
+            // 金簦草
+            {
+                id: "jindeng",
+                shape: "poly",
+                coords: [0.4, 0.65, 0.45, 0.6, 0.5, 0.68, 0.43, 0.7],
+                label: "金簦草",
+                target: "jindeng-detail"
+            },
+            // 清葛
+            {
+                id: "qingge",
+                shape: "rect",
+                coords: [0.65, 0.3, 0.7, 0.35],
+                label: "清葛垂条",
+                target: "qingge-detail"
+            },
+            // 玉蕗藤
+            {
+                id: "yulu",
+                shape: "circle",
+                coords: [0.5, 0.5, 0.04],
+                label: "玉蕗藤",
+                target: "yulu-detail"
+            }
+        ]
+    },
+    "stone-detail": {
+        img: "images/hengwu/stone.png",
+        areas: [{
+            id: "back-stone",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+
+    "bilu-detail": {
+        img: "images/hengwu/bilu.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "chenlan-detail": {
+        img: "images/hengwu/chenlan.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "duruo-detail": {
+        img: "images/hengwu/duruo.jpg",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "hengwu-plant-detail": {
+        img: "images/hengwu/hengwu.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "jindeng-detail": {
+        img: "images/hengwu/jindeng.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "qingge-detail": {
+        img: "images/hengwu/qingge.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
+        }]
+    },
+    "yulu-detail": {
+        img: "images/hengwu/yulu.png",
+        areas: [{
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室外",
+            target: "hengwu-outdoor"
         }]
     }
 };
@@ -379,24 +907,20 @@ async function initMap() {
     const labelsContainer = document.getElementById('map-labels');
     const loadingOverlay = document.getElementById('loading');
     
-    // 显示加载动画
     loadingOverlay.style.display = 'flex';
     mapImg.parentElement.classList.add('fade-out');
 
-    // 清空旧内容
     mapElement.innerHTML = '';
     labelsContainer.innerHTML = '';
     
     const currentMap = historyStack[historyStack.length-1];
     const config = MAP_CONFIGS[currentMap];
     
-    // 使用Promise确保图片加载完成
     await new Promise((resolve) => {
         mapImg.onload = resolve;
         mapImg.src = config.img;
     });
 
-    // 隐藏加载动画
     loadingOverlay.style.display = 'none';
     mapImg.parentElement.classList.remove('fade-out');
     mapImg.parentElement.classList.add('fade-in');
@@ -480,7 +1004,6 @@ function handleResize() {
 
 function handleClick(area) {
     if (area.target && MAP_CONFIGS[area.target]) {
-        // 点击动画
         const clickedLabel = document.querySelector(`.${area.id}`);
         if(clickedLabel) {
             clickedLabel.style.transform = 'translate(-50%, -50%) scale(0.9)';
@@ -496,7 +1019,6 @@ function handleClick(area) {
 
 function goBack() {
     if (historyStack.length > 1) {
-        // 返回按钮动画
         const backBtn = document.querySelector('.back-btn');
         backBtn.style.transform = 'scale(0.9)';
         setTimeout(() => {
