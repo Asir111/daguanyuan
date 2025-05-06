@@ -536,7 +536,18 @@ const MAP_CONFIGS = {
             }
         ]
     },
-
+    "outside-detail": {
+        img: "images/qiushuang/outdoor.jpg",
+        areas: [
+            {
+                id: "back-outdoor",
+                shape: "rect",
+                coords: [0.05, 0.05, 0.2, 0.1],
+                label: "返回秋爽斋",
+                target: "qiushuangzhai-detail"
+            },
+        ]
+    },
     // 新增各元素详情配置
     "table-detail": {
         img: "images/qiushuang/table.jpg",
@@ -744,7 +755,15 @@ const MAP_CONFIGS = {
             coords: [0.05, 0.05, 0.2, 0.1],
             label: "返回蘅芜苑",
             target: "hengwu-detail"
-        }]
+        },
+        {
+                id: "tujingping",
+                shape: "circle",
+                coords: [0.45, 0.5, 0.08], // 右侧中间区域
+                label: "土定瓶",
+                target: "tujingping-detail"
+            }
+    ]
     },
 
     // 室外基础配置 
@@ -769,7 +788,7 @@ const MAP_CONFIGS = {
                 id: "bilu",
                 shape: "rect",
                 coords: [0.45, 0.35, 0.5, 0.45],
-                label: "薜荔藤萝",
+                label: "薜荔",
                 target: "bilu-detail"
             },
             // 茞兰
@@ -777,7 +796,7 @@ const MAP_CONFIGS = {
                 id: "chenlan",
                 shape: "poly",
                 coords: [0.6, 0.4, 0.65, 0.35, 0.7, 0.45, 0.63, 0.5],
-                label: "茞兰芳芷",
+                label: "茞兰",
                 target: "chenlan-detail"
             },
             // 杜若
@@ -785,7 +804,7 @@ const MAP_CONFIGS = {
                 id: "duruo",
                 shape: "circle",
                 coords: [0.55, 0.6, 0.05],
-                label: "杜若含香",
+                label: "杜若",
                 target: "duruo-detail"
             },
             // 蘅芜
@@ -793,7 +812,7 @@ const MAP_CONFIGS = {
                 id: "hengwu",
                 shape: "rect",
                 coords: [0.7, 0.55, 0.75, 0.65],
-                label: "蘅芜清芬",
+                label: "蘅芜",
                 target: "hengwu-plant-detail"
             },
             // 金簦草
@@ -809,7 +828,7 @@ const MAP_CONFIGS = {
                 id: "qingge",
                 shape: "rect",
                 coords: [0.65, 0.3, 0.7, 0.35],
-                label: "清葛垂条",
+                label: "清葛",
                 target: "qingge-detail"
             },
             // 玉蕗藤
@@ -895,8 +914,19 @@ const MAP_CONFIGS = {
             label: "返回室外",
             target: "hengwu-outdoor"
         }]
+    },
+    "tujingping-detail": {
+        img: "images/hengwu/土定瓶.png",
+        areas: [{
+            id: "back-tujing",
+            shape: "rect",
+            coords: [0.05, 0.05, 0.2, 0.1],
+            label: "返回室内",
+            target: "hengwu-indoor"
+        }]
     }
 };
+
 
 let historyStack = ["main"];
 let resizeTimer;
